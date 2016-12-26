@@ -150,7 +150,7 @@ public:
 	random_generator_range(value_type min, value_type max, std::mt19937& mt)
 		: min_(min), max_(max), mt_(mt) {}
 	iterator begin() noexcept { return{ min_, max_, mt_.get() }; }
-	constexpr iterator end() const noexcept { return{}; }
+	iterator end() noexcept { return{}; }
 };
 template<typename T>
 class random_generator_range_with_count {
