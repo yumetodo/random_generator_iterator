@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 enable_language(CXX)
-set(CMAKE_CXX_STANDARD 14) # C++11...
+set(CMAKE_CXX_STANDARD 14) # C++14...
 set(CMAKE_CXX_STANDARD_REQUIRED ON) #...is required...
 set(CMAKE_CXX_EXTENSIONS OFF) #...without compiler extensions like gnu++11
 
@@ -14,7 +14,15 @@ set(SRCS "main.cpp")
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
   # Update if necessary
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mrdrnd -mrdseed")
+  option(USE_RDRND "enable rdrnd" 1)
+  option(USE_RDSEED "enable rdseed" 0)
+  if(USE_RDRND)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mrdrnd")
+  endif()
+  if(USE_RDSEED)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mrdseed")
+  endif()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 endif()
 
 ## Define the executable

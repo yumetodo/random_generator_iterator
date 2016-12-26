@@ -54,8 +54,12 @@ inline unsigned int get_randome_from_dev_random() {
 #include <cstring>
 #include <vector>
 #include <type_traits>
-#if !defined(__c2__) || (defined(__clang__) && (__clang_major__ >= 4 ) || __clang_major__ == 3 && __clang_minor__ >= 9)//古いClang with Microsoft CodeGenはasmに対応していない
 #include <climits>
+#if (defined(__c2__) && defined(__clang__) && __clang_major__ == 3 && __clang_minor__ == 8) || (defined(__GNUC__) && !defined(__RDRND__) && !defined(__RDSEED__))
+//古いClang with Microsoft CodeGenはasmに対応していない
+//GCC系は-mrdrnd, -mrdseedがついているか判別する必要がある
+#	define DXLE_NO_ASM
+#else
 #	ifndef __INTEL_COMPILER
 #		include <immintrin.h>
 #		if defined(_WIN32) || defined(_WIN64)
@@ -110,8 +114,6 @@ namespace intrin {
 		return (RDSEED_MASK == (reg.EBX & RDSEED_MASK));
 	}
 }
-#else
-#	define DXLE_NO_ASM
 #endif//!defined(_MSC_VER) || !defined(__clang__)
 namespace detail {
 	template<typename Pointer>
