@@ -2,10 +2,19 @@
 #define INCLUDE_RANDOM_GENERATOR_ITERATOR_HPP_
 #include "random.hpp"
 #include <memory>
+#include <type_traits>
+//expect Empty Base Optimization
+struct random_generator_iterator_base {};
+template<typename T>
+struct is_random_generator_iterator : std::integral_constant<bool, std::is_base_of<random_generator_iterator_base, T>::value> {};
+template<typename T>
+constexpr bool is_random_generator_iterator_v = is_random_generator_iterator<T>::value;
+
 template<typename T>
 class random_generator_iterator
+	: public random_generator_iterator_base
 #if __cplusplus < 201500 //C++17ではstd::iteratorは消える
-    : std::iterator<std::input_iterator_tag, T>
+	, public std::iterator<std::input_iterator_tag, T>
 #endif
 {
 #if __cplusplus < 201500
@@ -69,8 +78,9 @@ public:
 };
 template<typename T>
 class random_generator_iterator_with_count 
+	: public random_generator_iterator_base
 #if __cplusplus < 201500 //C++17ではstd::iteratorは消える
-	: public std::iterator<std::input_iterator_tag, T>
+	, public std::iterator<std::input_iterator_tag, T>
 #endif
 {
 #if __cplusplus < 201500
