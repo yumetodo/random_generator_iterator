@@ -79,7 +79,7 @@ namespace intrin {
 		char str[12];
 	};
 	inline regs_t get_cpuid(unsigned int level) {
-		regs_t re = { 0 };
+		regs_t re = {};
 		static_assert(sizeof(re) == (sizeof(uint32_t) * 4), "illegal size of struct regs_t ");
 #	if defined(__INTEL_COMPILER) || defined(_MSC_VER) && !defined(__clang__)
 		__cpuid(reinterpret_cast<int*>(&re), static_cast<int>(level));
