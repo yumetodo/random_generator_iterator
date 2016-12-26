@@ -1,2 +1,5 @@
 cmake-build*/
+build/
+build_*/
+.vscode/
 .codelite/
