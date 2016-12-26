@@ -137,4 +137,27 @@ public:
 	iterator begin() noexcept { return{ min_, max_, mt_.get() }; }
 	constexpr iterator end() const noexcept { return{}; }
 };
+template<typename T>
+class random_generator_range_with_count {
+public:
+	using value_type = T;
+	using iterator = random_generator_iterator_with_count<value_type>;
+private:
+	value_type min_;
+	value_type max_;
+	std::reference_wrapper<std::mt19937> mt_;
+	std::size_t count_;
+public:
+	random_generator_range_with_count() = delete;
+	random_generator_range_with_count(const random_generator_range_with_count&) = delete;
+	random_generator_range_with_count(random_generator_range_with_count&&) = default;
+	random_generator_range_with_count& operator=(const random_generator_range_with_count&) = delete;
+	random_generator_range_with_count& operator=(random_generator_range_with_count&&) = delete;
+	random_generator_range_with_count(std::size_t count, value_type min, value_type max, std::mt19937& mt)
+		: min_(min), max_(max), mt_(mt), count_(count)
+	{}
+	iterator begin() noexcept { return{ min_, max_, mt_.get() }; }
+	iterator end() const noexcept { return{ count_ }; }
+};
+
 #endif //INCLUDE_RANDOM_GENERATOR_ITERATOR_HPP_
