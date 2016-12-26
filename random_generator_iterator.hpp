@@ -1,4 +1,4 @@
-#ifndef INCLUDE_RANDOM_GENERATOR_ITERATOR_HPP_
+﻿#ifndef INCLUDE_RANDOM_GENERATOR_ITERATOR_HPP_
 #define INCLUDE_RANDOM_GENERATOR_ITERATOR_HPP_
 #include "random.hpp"
 template<typename T>
