@@ -109,7 +109,7 @@ private:
 	std::size_t count_;
 	random_generator_iterator<value_type> it_;
 public:
-	random_generator_iterator_with_count() = delete;
+	random_generator_iterator_with_count() = default;
 	constexpr random_generator_iterator_with_count(std::size_t n) noexcept : count_(n), it_() {}
 	random_generator_iterator_with_count(const random_generator_iterator_with_count&) = delete;
 	random_generator_iterator_with_count(random_generator_iterator_with_count&&) = default;
