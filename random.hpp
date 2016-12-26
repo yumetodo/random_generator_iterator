@@ -55,6 +55,7 @@ inline unsigned int get_randome_from_dev_random() {
 #include <vector>
 #include <type_traits>
 #if !defined(__c2__) || (defined(__clang__) && (__clang_major__ >= 4 ) || __clang_major__ == 3 && __clang_minor__ >= 9)//古いClang with Microsoft CodeGenはasmに対応していない
+#include <climits>
 #	ifndef __INTEL_COMPILER
 #		include <immintrin.h>
 #		if defined(_WIN32) || defined(_WIN64)
