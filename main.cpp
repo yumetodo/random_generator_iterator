@@ -6,6 +6,7 @@ int main(int argc, char **argv)
 {
 	static_assert(is_random_generator_iterator_v<random_generator_iterator<int>>, "err");
 	std::cout << "generate: random_generator_iterator" << std::endl;
+	constexpr random_generator_iterator<int> i;
 	for (auto ri = random_generator_iterator<int>(0, 10, engine); ri != random_generator_iterator<int>{}; ++ri) {
 		const auto n = *ri;
 		std::cout << n << std::endl;
