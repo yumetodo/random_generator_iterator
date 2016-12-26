@@ -8,19 +8,22 @@ class random_generator_iterator
     : std::iterator<std::input_iterator_tag, T>
 #endif
 {
+#if __cplusplus < 201500
+private:
+	using base_type = std::iterator<std::input_iterator_tag, T>;
 public:
-#if __cplusplus < 201500  
-    using iterator_category = typename base_type::iterator_category;
-    using value_type = typename base_type::value_type;
-    using difference_type = typename base_type::difference_type;
-    using pointer = typename base_type::pointer;
-    using reference = typename base_type::reference;
-#els
-    using iterator_category = typename std::iterator_traits<Iterator>::iterator_category;
-    using value_type = T;
-    using difference_type = std::ptrdiff_t;
-    using pointer = T*;
-    using reference = T&;
+	using iterator_category = typename base_type::iterator_category;
+	using value_type = typename base_type::value_type;
+	using difference_type = typename base_type::difference_type;
+	using pointer = typename base_type::pointer;
+	using reference = typename base_type::reference;
+#else
+public:
+	using iterator_category = typename std::iterator_traits<Iterator>::iterator_category;
+	using value_type = T;
+	using difference_type = std::ptrdiff_t;
+	using pointer = T*;
+	using reference = T&;
 #endif
 	using distribution = uniform_normal_distribution<value_type>;
 private:
@@ -52,7 +55,16 @@ public:
 	value_type operator*() { return this->pimpl_->generate(); }
 	random_generator_iterator& operator++() noexcept
 	{ 
+		if (this->pimpl_->next_is_end) this->is_end_iterator_ = true;
 		return *this;
 	}
+	random_generator_iterator operator++(int) noexcept
+	{
+		const auto re = *this;
+		if (this->pimpl_->next_is_end) this->is_end_iterator_ = true;
+		return re;
+	}
+	constexpr bool operator==(const random_generator_iterator& r) const noexcept { return this->is_end_iterator_ == r.is_end_iterator_; }
+	constexpr bool operator!=(const random_generator_iterator& r) const noexcept { return !(*this == r); }
 };
 #endif //INCLUDE_RANDOM_GENERATOR_ITERATOR_HPP_
