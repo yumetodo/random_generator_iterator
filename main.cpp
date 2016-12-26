@@ -1,4 +1,9 @@
-﻿#include "random_generator_iterator.hpp"
+﻿/*=============================================================================
+Copyright (C) 2016 yumetodo <yume-wikijp@live.jp>
+Distributed under the Boost Software License, Version 1.0.
+(See http://www.boost.org/LICENSE_1_0.txt)
+=============================================================================*/
+#include "random_generator_iterator.hpp"
 #include <iostream>
 //random generator
 static auto engine = create_engine();

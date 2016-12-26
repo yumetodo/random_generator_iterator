@@ -1,4 +1,9 @@
-﻿#ifndef INCLUDE_RANDOM_GENERATOR_ITERATOR_HPP_
+﻿/*=============================================================================
+Copyright (C) 2016 yumetodo <yume-wikijp@live.jp>
+Distributed under the Boost Software License, Version 1.0.
+(See http://www.boost.org/LICENSE_1_0.txt)
+=============================================================================*/
+#ifndef INCLUDE_RANDOM_GENERATOR_ITERATOR_HPP_
 #define INCLUDE_RANDOM_GENERATOR_ITERATOR_HPP_
 #include "random.hpp"
 #include <memory>
