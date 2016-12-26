@@ -18,7 +18,7 @@ Distributed under the Boost Software License, Version 1.0.
 #	include <thread>
 #endif //defined(__MINGW32__) && !defined(__clang__)
 #if defined(_WIN32) || defined(_WIN64)
-#	define DXLE_ARC_FOR_WINDWOS 1
+#	define RGI_ARC_FOR_WINDWOS 1
 #	if !defined(CINTERFACE) && defined(__c2__) &&  __clang_major__ == 3 && __clang_minor__ == 8
 //To avoid compile error
 //C:\Program Files (x86)\Windows Kits\8.1\Include\um\combaseapi.h(229,21): error : unknown type name 'IUnknown'
@@ -28,7 +28,7 @@ Distributed under the Boost Software License, Version 1.0.
 #	include <Windows.h>
 #	include <tchar.h>
 #elif defined(__linux__)
-#	define DXLE_ARC_FOR_LINUX 1
+#	define RGI_ARC_FOR_LINUX 1
 #	include <sys/types.h>
 #	include <unistd.h>
 #	include <fstream>
@@ -54,7 +54,12 @@ inline unsigned int get_randome_from_dev_random() {
 #include <cstring>
 #include <vector>
 #include <type_traits>
-#if !defined(__c2__) || (defined(__clang__) && (__clang_major__ >= 4 ) || __clang_major__ == 3 && __clang_minor__ >= 9)//古いClang with Microsoft CodeGenはasmに対応していない
+#include <climits>
+#if (defined(__c2__) && defined(__clang__) && __clang_major__ == 3 && __clang_minor__ == 8) || (defined(__GNUC__) && !defined(__RDRND__) && !defined(__RDSEED__))
+//古いClang with Microsoft CodeGenはasmに対応していない
+//GCC系は-mrdrnd, -mrdseedがついているか判別する必要がある
+#	define RGI_NO_ASM
+#else
 #	ifndef __INTEL_COMPILER
 #		include <immintrin.h>
 #		if defined(_WIN32) || defined(_WIN64)
@@ -64,6 +69,12 @@ inline unsigned int get_randome_from_dev_random() {
 #		endif //defined(_WIN32) || defined(_WIN64)
 #		ifdef __GNUC__
 #			include <cpuid.h>
+#			ifndef __RDRND__
+#				define RGI_NO_RDRND
+#			endif
+#			ifndef __RDSEED__
+#				define RGI_NO_RDSEED
+#			endif
 #		endif //__GNUC__
 #	endif //__INTEL_COMPILER
 using std::uint32_t;
@@ -74,7 +85,7 @@ namespace intrin {
 		char str[12];
 	};
 	inline regs_t get_cpuid(unsigned int level) {
-		regs_t re = { 0 };
+		regs_t re = {};
 		static_assert(sizeof(re) == (sizeof(uint32_t) * 4), "illegal size of struct regs_t ");
 #	if defined(__INTEL_COMPILER) || defined(_MSC_VER) && !defined(__clang__)
 		__cpuid(reinterpret_cast<int*>(&re), static_cast<int>(level));
@@ -109,8 +120,6 @@ namespace intrin {
 		return (RDSEED_MASK == (reg.EBX & RDSEED_MASK));
 	}
 }
-#else
-#	define DXLE_NO_ASM
 #endif//!defined(_MSC_VER) || !defined(__clang__)
 namespace detail {
 	template<typename Pointer>
@@ -153,7 +162,7 @@ inline seed_v_t create_seed_v() {
 #if defined(__c2__) && __clang_minor__ < 9
 	constexpr std::size_t randome_device_generate_num = 12;//Clnag with Microsoft CodeGen does not support RDRND/RDSEED so that use std::random_device agressively.
 #else
-	static constexpr std::size_t randome_device_generate_num = 9;
+	constexpr std::size_t randome_device_generate_num = 9;
 #endif
 	seed_v_t sed_v(randome_device_generate_num);// 初期化用ベクター
 #ifndef _CRT_RAND_S
@@ -169,42 +178,46 @@ inline seed_v_t create_seed_v() {
 		return re;
 	});// ベクタの初期化
 #endif //_CRT_RAND_S
-#ifndef DXLE_NO_ASM
+#ifndef RGI_NO_ASM
+#	ifndef RGI_NO_RDRND
 	if (intrin::IsRDRANDsupport()) {//RDRAND命令の結果もベクターに追加
 		for (unsigned int i = 0; i < 4; i++) {
 			unsigned int rdrand_value = 0;
-#	if defined(_MSC_VER) || defined(__INTEL_COMPILER)
+#		if defined(_MSC_VER) || defined(__INTEL_COMPILER)
 			_rdrand32_step(&rdrand_value);
-#	else//defined(_MSC_VER) || defined(__INTEL_COMPILER)
+#		else//defined(_MSC_VER) || defined(__INTEL_COMPILER)
 			__builtin_ia32_rdrand32_step(&rdrand_value);
-#	endif//defined(_MSC_VER) || defined(__INTEL_COMPILER)
+#		endif//defined(_MSC_VER) || defined(__INTEL_COMPILER)
 			if (0 != rdrand_value) {
 				sed_v.push_back((rdrand_value < std::numeric_limits<decltype(rdrand_value)>::max() - i) ? rdrand_value + i : rdrand_value);
 			}
 		}
 	}
+#	endif //RGI_NO_RDRND
+#	ifndef RGI_NO_RDSEED
 	if (intrin::IsRDSEEDsupport()) {
 		for (unsigned int i = 0; i < 5; i++) {
 			unsigned int rdseed_value = 0;
-#	if defined(_MSC_VER) || defined(__INTEL_COMPILER)
+#		if defined(_MSC_VER) || defined(__INTEL_COMPILER)
 			_rdseed32_step(&rdseed_value);
-#	else//defined(_MSC_VER) || defined(__INTEL_COMPILER)
+#		else//defined(_MSC_VER) || defined(__INTEL_COMPILER)
 			__builtin_ia32_rdseed32_step(&rdseed_value);
-#	endif//defined(_MSC_VER) || defined(__INTEL_COMPILER)
+#		endif//defined(_MSC_VER) || defined(__INTEL_COMPILER)
 			if (0 != rdseed_value) {
 				sed_v.push_back((rdseed_value < std::numeric_limits<decltype(rdseed_value)>::max() - i) ? rdseed_value + i : rdseed_value);
 			}
 		}
 	}
-#endif//!defined(DXLE_NO_ASM)
-#ifdef DXLE_ARC_FOR_WINDWOS
+#	endif //RGI_NO_RDSEED
+#endif//!defined(RGI_NO_ASM)
+#ifdef RGI_ARC_FOR_WINDWOS
 	POINT point;
 	GetCursorPos(&point);
 	sed_v | push_back(point.x);
 	sed_v | push_back(point.y);
 	sed_v | push_back(GetCurrentProcessId());
-#endif //DXLE_ARC_FOR_WINDWOS
-#ifdef DXLE_ARC_FOR_LINUX
+#endif //RGI_ARC_FOR_WINDWOS
+#ifdef RGI_ARC_FOR_LINUX
 	sed_v | push_back(get_randome_from_dev_random());
 	sed_v | push_back(getppid());
 	sed_v | push_back(get_randome_from_dev_random());

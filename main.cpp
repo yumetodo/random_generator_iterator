@@ -2,7 +2,7 @@
 #include <iostream>
 //random generator
 static auto engine = create_engine();
-int main(int argc, char **argv)
+int main()
 {
 	static_assert(is_random_generator_iterator_v<random_generator_iterator<int>>, "err");
 	std::cout << "generate: random_generator_iterator" << std::endl;
