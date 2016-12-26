@@ -1,4 +1,4 @@
-/*=============================================================================
+﻿/*=============================================================================
 Copyright (C) 2015-2016 DxLibEx project
 https://github.com/Nagarei/DxLibEx/
 Distributed under the Boost Software License, Version 1.0.
@@ -7,7 +7,7 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef INCLUDE_RANDOM_HPP_
 #define INCLUDE_RANDOM_HPP_
 #ifndef NOMINMAX
-#	define NOMINAMX
+#	define NOMINMAX
 #endif
 #if defined(__MINGW32__) && !defined(__clang__)
 	//mingw-gcc's std::randome_device is broken.
@@ -32,18 +32,16 @@ Distributed under the Boost Software License, Version 1.0.
 #	include <sys/types.h>
 #	include <unistd.h>
 #	include <fstream>
-namespace dxle {
-	inline unsigned int get_randome_from_dev_random() {
-		std::ifstream file("/dev/random", std::ios::binary);
-		if (file.is_open())
-		{
-			char buf[sizeof(unsigned int)];
-			file.read(buf, sizeof(unsigned int));
-			file.close();
-			return *reinterpret_cast<int*>(buf);
-		}
-		return 0;
+inline unsigned int get_randome_from_dev_random() {
+	std::ifstream file("/dev/random", std::ios::binary);
+	if (file.is_open())
+	{
+		char buf[sizeof(unsigned int)];
+		file.read(buf, sizeof(unsigned int));
+		file.close();
+		return *reinterpret_cast<int*>(buf);
 	}
+	return 0;
 }
 #endif
 #include <random>
@@ -99,13 +97,13 @@ namespace intrin {
 		return is_amd_cpu;
 	}
 	inline bool IsRDRANDsupport() {
-		DXLE_STATIC_CONSTEXPR uint32_t RDRAND_MASK = 1U << 30U;
+		static constexpr uint32_t RDRAND_MASK = 1U << 30U;
 		if (!IsIntelCPU() && !IsAMDCPU()) return false;
 		const auto reg = get_cpuid(1);//If RDRAND is supported, the bit 30 of the ECX register is set after calling CPUID standard function 01H.
 		return (RDRAND_MASK == (reg.ECX & RDRAND_MASK));
 	}
 	inline bool IsRDSEEDsupport() {
-		DXLE_STATIC_CONSTEXPR uint32_t RDSEED_MASK = 1U << 18U;
+		static constexpr uint32_t RDSEED_MASK = 1U << 18U;
 		if (!IsIntelCPU()) return false;
 		const auto reg = get_cpuid(7);//If RDSEED is supported, the bit 18 of the EBX register is set after calling CPUID standard function 07H.
 		return (RDSEED_MASK == (reg.EBX & RDSEED_MASK));
@@ -134,8 +132,8 @@ namespace detail {
 	template<typename value_type, typename T>
 	struct vector_push_back_operator_impl<value_type, T, true> {
 		void operator()(std::vector<value_type>& v, vector_push_back_helper<T> info) {
-			DXLE_STATIC_CONSTEXPR size_t size_time = sizeof(T) / sizeof(value_type);
-			DXLE_STATIC_CONSTEXPR size_t rshft_num = sizeof(value_type) * CHAR_BIT;
+			static constexpr size_t size_time = sizeof(T) / sizeof(value_type);
+			static constexpr size_t rshft_num = sizeof(value_type) * CHAR_BIT;
 			for (size_t i = 0; i < size_time; ++i) {
 				const auto tmp = static_cast<value_type>((std::uintmax_t)(info.value) >> (rshft_num * i));
 				if (tmp) v.push_back(tmp);
@@ -147,17 +145,15 @@ namespace detail {
 		vector_push_back_operator_impl<value_type, T, (sizeof(value_type) < sizeof(T))> ()(v, info);
 	}
 }
-}
-namespace dxle {
 template<typename T>
-dxle::detail::vector_push_back_helper<T> push_back(T pointer) { return{ pointer }; }
+detail::vector_push_back_helper<T> push_back(T pointer) { return{ pointer }; }
 using seed_v_t = std::vector<unsigned int>;
 inline seed_v_t create_seed_v() {
 	const auto begin_time = std::chrono::high_resolution_clock::now();
 #if defined(__c2__) && __clang_minor__ < 9
 	constexpr std::size_t randome_device_generate_num = 12;//Clnag with Microsoft CodeGen does not support RDRND/RDSEED so that use std::random_device agressively.
 #else
-	DXLE_STATIC_CONSTEXPR std::size_t randome_device_generate_num = 9;
+	static constexpr std::size_t randome_device_generate_num = 9;
 #endif
 	seed_v_t sed_v(randome_device_generate_num);// 初期化用ベクター
 #ifndef _CRT_RAND_S
@@ -229,8 +225,20 @@ inline std::mt19937 create_engine() {
 	std::seed_seq seq(sed_v.begin(), sed_v.end());
 	return std::mt19937(seq);
 }
+template<typename ...Args>
+struct first_enabled {};
+
+template<typename T, typename ...Args>
+struct first_enabled<std::enable_if<true, T>, Args...> { using type = T; };
+template<typename T, typename ...Args>
+struct first_enabled<std::enable_if<false, T>, Args...> : first_enabled<Args...> {};
+template<typename T, typename ...Args>
+struct first_enabled<T, Args...> { using type = T; };
+
+template<typename ...Args>
+using first_enabled_t = typename first_enabled<Args...>::type;
 template<typename T>
-using uniform_normal_distribution = dxle::first_enabled_t<
+using uniform_normal_distribution = first_enabled_t<
 	std::enable_if<std::is_integral<T>::value, std::uniform_int_distribution<T>>,
 	std::enable_if<std::is_floating_point<T>::value, std::uniform_real_distribution<T>>
 >;
