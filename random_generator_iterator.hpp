@@ -67,4 +67,24 @@ public:
 	constexpr bool operator==(const random_generator_iterator& r) const noexcept { return this->is_end_iterator_ == r.is_end_iterator_; }
 	constexpr bool operator!=(const random_generator_iterator& r) const noexcept { return !(*this == r); }
 };
+template<typename T>
+class random_generator_range {
+public:
+	using value_type = T;
+	using iterator = random_generator_iterator<value_type>;
+private:
+	value_type min_;
+	value_type max_;
+	std::reference_wrapper<std::mt19937> mt_;
+public:
+	random_generator_range() = delete;
+	random_generator_range(const random_generator_range&) = delete;
+	random_generator_range(random_generator_range&&) = default;
+	random_generator_range& operator=(const random_generator_range&) = delete;
+	random_generator_range& operator=(random_generator_range&&) = delete;
+	random_generator_range(value_type min, value_type max, std::mt19937& mt)
+		: min_(min), max_(max), mt_(mt) {}
+	iterator begin() noexcept { return{ min_, max_, mt_.get() }; }
+	constexpr iterator end() const noexcept { return{}; }
+};
 #endif //INCLUDE_RANDOM_GENERATOR_ITERATOR_HPP_
